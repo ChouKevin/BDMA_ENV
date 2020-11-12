@@ -1,0 +1,74 @@
+version: '3.8'
+services:
+    spark-master:
+        image: spark_master
+        networks: 
+            - spark_cluster
+        # ports:
+        #     - 18080:8080
+        volumes:
+            - ./dataset:/BDMA/dataset:ro
+            - ./output:/BDMA/output
+            - ./homework:/BDMA/homework
+
+    ssl-nginx:
+        image: ssl_nginx
+        networks: 
+            - spark_cluster
+        ports: 
+            - 18888:18888
+            - 18080:18080
+            - 18081:18081
+            - 18082:18082
+        depends_on: 
+            - spark-master
+            - jupyter-lab
+
+    spark-worker-1:
+        image: spark_worker
+        networks: 
+            - spark_cluster
+        # ports: 
+        #     - 18081:8081
+        depends_on: 
+            - spark-master
+        volumes:
+            - ./dataset:/BDMA/dataset:ro
+            - ./output:/BDMA/output
+            - ./homework:/BDMA/homework
+        environment: 
+            - SPARK_WORKER_MEMORY=2g
+            - SPARK_WORKER_CORES=2
+                
+    spark-worker-2:
+        image: spark_worker
+        networks: 
+            - spark_cluster
+        # ports: 
+        #     - 18082:8081
+        depends_on: 
+            - spark-master
+        volumes:
+            - ./dataset:/BDMA/dataset:ro
+            - ./output:/BDMA/output
+            - ./homework:/BDMA/homework
+        environment: 
+            - SPARK_WORKER_MEMORY=2g
+            - SPARK_WORKER_CORES=2
+
+    jupyter-lab:
+        image: jupyter_lab
+        networks: 
+            - spark_cluster
+        depends_on: 
+            - spark-master
+        volumes:
+            - ./dataset:/BDMA/dataset:ro
+            - ./output:/BDMA/output
+            - ./homework:/BDMA/homework
+        environment: 
+            JUPYTER_TOKEN: '878787'
+
+
+networks: 
+    spark_cluster:
